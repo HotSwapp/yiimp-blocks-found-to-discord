@@ -63,9 +63,9 @@ async def refresh_stocks_exchange_markets(url, d_markets):
         return
 
 
-async def refresh_cryptopia_markets(url, d_markets):
+async def refresh_southexchange_markets(url, d_markets):
 
-    logger = logging.getLogger('refresh_cryptopia_markets')
+    logger = logging.getLogger('refresh_southexchange_markets')
 
     try:
         while True:
@@ -123,7 +123,7 @@ async def poll_yiimp_events(url, queue):
         return
 
 
-async def post_events_discord(url, queue, d_markets_stocks_exchange, d_markets_cryptopia):
+async def post_events_discord(url, queue, d_markets_stocks_exchange, d_markets_southexchange):
 
     logger = logging.getLogger('post_events_discord')
 
@@ -136,9 +136,9 @@ async def post_events_discord(url, queue, d_markets_stocks_exchange, d_markets_c
                 message = ' :four_leaf_clover: `LuckyAltcoin found %f %s !`' % (coin_amount, coin_name)
 
                 # Attempt to convert coin value in BTC
-                if (coin_name, 'BTC') in d_markets_cryptopia:
-                    coin_amount_btc = coin_amount * d_markets_cryptopia[(coin_name, 'BTC')]
-                    message += ' (Cryptopia: %fBTC)' % coin_amount_btc
+                if (coin_name, 'BTC') in d_markets_southexchange:
+                    coin_amount_btc = coin_amount * d_markets_southexchange[(coin_name, 'BTC')]
+                    message += ' (southexchange: %fBTC)' % coin_amount_btc
                 elif (coin_name, 'BTC') in d_markets_stocks_exchange:
                     coin_amount_btc = coin_amount * d_markets_stocks_exchange[(coin_name, 'BTC')]
                     message += ' (StocksExc: %fBTC)' % coin_amount_btc
@@ -147,9 +147,9 @@ async def post_events_discord(url, queue, d_markets_stocks_exchange, d_markets_c
 
                 # Attempt to convert BTC coin value in USDT
                 if coin_amount_btc is not None:
-                    if ('BTC', 'USDT') in d_markets_cryptopia:
-                         coin_amount_usdt = coin_amount_btc * d_markets_cryptopia[('BTC', 'USDT')]
-                         message += ' (Cryptopia: %fUSDT)' % coin_amount_usdt
+                    if ('BTC', 'USDT') in d_markets_southexchange:
+                         coin_amount_usdt = coin_amount_btc * d_markets_southexchange[('BTC', 'USDT')]
+                         message += ' (southexchange: %fUSDT)' % coin_amount_usdt
                     else:
                         coin_amount_btc = None
 
@@ -178,7 +178,7 @@ if __name__ == '__main__':
     logger = logging.getLogger('main')
 
     d_markets_stocks_exchange = dict()
-    d_markets_cryptopia = dict()
+    d_markets_southexchange = dict()
 
     def cli_arguments():
         parser = argparse.ArgumentParser(description='Service polling YIIMP pool to output found blocks on Discord (with currency conversion)')
@@ -191,24 +191,24 @@ if __name__ == '__main__':
     pool_url = config.pool_url
     discord_url = config.discord_url
     stocks_exchange_url = 'https://app.stocks.exchange/api2/markets'
-    cryptopia_url = 'https://www.cryptopia.co.nz/api/GetMarkets'
+    southexchange_url = 'https://www.southxchange.com/api/markets'
 
     try:
         logger.info('Starting refresh_stock_exchange_markets')
         refresh_stocks_exchange_markets_coro = loop.create_task(refresh_stocks_exchange_markets(stocks_exchange_url, d_markets_stocks_exchange))
 
-        logger.info('Starting refresh_cryptopia_markets')
-        refresh_cryptopia_markets_coro = loop.create_task(refresh_cryptopia_markets(cryptopia_url, d_markets_cryptopia))
+        logger.info('Starting refresh_southexchange_markets')
+        refresh_southexchange_markets_coro = loop.create_task(refresh_southexchange_markets(southexchange_url, d_markets_southexchange))
 
         logger.info('Starting poll_yiimp_events coroutine')
         poll_yiimp_events_coro = loop.create_task(poll_yiimp_events(pool_url, queue))
 
         logger.info('Starting post_events_discord coroutine')
-        post_events_discord_coro = loop.create_task(post_events_discord(discord_url, queue, d_markets_stocks_exchange, d_markets_cryptopia))
+        post_events_discord_coro = loop.create_task(post_events_discord(discord_url, queue, d_markets_stocks_exchange, d_markets_southexchange))
 
         loop.run_until_complete(asyncio.gather(poll_yiimp_events_coro,
                                                post_events_discord_coro,
-                                               refresh_cryptopia_markets_coro,
+                                               refresh_southexchange_markets_coro,
                                                refresh_stocks_exchange_markets_coro,
                                               ))
 
