@@ -133,7 +133,7 @@ async def post_events_discord(url, queue, d_markets_stocks_exchange, d_markets_c
             try:
                 dt, coin_name, coin_amount = await queue.get()
 
-                message = '%f %s found at %s UTC' % (coin_amount, coin_name, dt)
+                message = ' :four_leaf_clover: `LuckyAltcoin found %f %s !`' % (coin_amount, coin_name)
 
                 # Attempt to convert coin value in BTC
                 if (coin_name, 'BTC') in d_markets_cryptopia:
@@ -190,7 +190,7 @@ if __name__ == '__main__':
 
     pool_url = config.pool_url
     discord_url = config.discord_url
-    stocks_exchange_url = 'https://stocks.exchange/api2/markets'
+    stocks_exchange_url = 'https://app.stocks.exchange/api2/markets'
     cryptopia_url = 'https://www.cryptopia.co.nz/api/GetMarkets'
 
     try:
